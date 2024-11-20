@@ -1,22 +1,35 @@
-import { View, Text, StyleSheet, TextInput } from "react-native";
+import { View, Text, StyleSheet, TextInput, Alert } from "react-native";
 import { useState } from "react";
 import Colors from "@/constants/Colors";
 import { Link, Stack } from "expo-router";
 import Button from "@/components/Button";
+import { supabase } from "@/lib/supabase";
 
 const SignUp = () => {
-  const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState("");
 
+  const signUpWithEmail = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) Alert.alert(error.message);
+    setLoading(false);
+  };
+
   const resetFields = () => {
-    setUserName("");
+    setEmail("");
     setPassword("");
   };
 
   const validateInput = () => {
     setErrors("");
-    if (!userName) {
+    if (!email) {
       setErrors("Username is required");
       return false;
     }
@@ -44,8 +57,8 @@ const SignUp = () => {
       <Text style={styles.label}>Username</Text>
       <TextInput
         placeholder="username"
-        value={userName}
-        onChangeText={setUserName}
+        value={email}
+        onChangeText={setEmail}
         style={styles.input}
       />
 
@@ -55,10 +68,15 @@ const SignUp = () => {
         value={password}
         onChangeText={setPassword}
         style={styles.input}
+        secureTextEntry
       />
 
       <Text style={{ color: "red" }}>{errors}</Text>
-      <Button text="Create account" onPress={onSubmit} />
+      <Button
+        text={loading ? "Creating Account..." : "Create Account"}
+        onPress={signUpWithEmail}
+        disabled={loading}
+      />
 
       <Link href="/(auth)/sign-in" style={styles.textButton}>
         Sign In
