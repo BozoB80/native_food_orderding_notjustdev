@@ -5,18 +5,18 @@ import { Link, Stack } from "expo-router";
 import Button from "@/components/Button";
 
 const SignIn = () => {
-  const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState("");
 
   const resetFields = () => {
-    setUserName("");
+    setEmail("");
     setPassword("");
   };
 
   const validateInput = () => {
     setErrors("");
-    if (!userName) {
+    if (!email) {
       setErrors("Username is required");
       return false;
     }
@@ -44,8 +44,8 @@ const SignIn = () => {
       <Text style={styles.label}>Username</Text>
       <TextInput
         placeholder="username"
-        value={userName}
-        onChangeText={setUserName}
+        value={email}
+        onChangeText={setEmail}
         style={styles.input}
       />
 
@@ -55,6 +55,7 @@ const SignIn = () => {
         value={password}
         onChangeText={setPassword}
         style={styles.input}
+        secureTextEntry
       />
 
       <Text style={{ color: "red" }}>{errors}</Text>
