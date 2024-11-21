@@ -1,24 +1,58 @@
 import { View, Text, StyleSheet, TextInput, Image, Alert } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Colors from "@/constants/Colors";
 import Button from "@/components/Button";
 import { defaultPizzaImage } from "@/components/ProductListItem";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  useCreateProduct,
+  useDeleteProduct,
+  useGetProduct,
+  useUpdateProduct,
+} from "@/queries";
 
 const CreateProduct = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [errors, setErrors] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const router = useRouter();
 
-  const { id } = useLocalSearchParams();
+  const { id: idString } = useLocalSearchParams();
+  const id = parseFloat(
+    typeof idString === "string" ? idString : idString?.[0]
+  );
   const isUpdating = !!id;
 
   const resetFields = () => {
     setName("");
     setPrice("");
   };
+
+  const { mutate: createProduct } = useCreateProduct(() => {
+    resetFields();
+    router.back();
+  });
+
+  const { mutate: updateProduct } = useUpdateProduct(() => {
+    resetFields();
+    router.back();
+  });
+
+  const { data: updatingProduct } = useGetProduct(id);
+  const { mutate: deleteProduct } = useDeleteProduct(() => {
+    resetFields();
+    router.replace("/(admin)");
+  });
+
+  useEffect(() => {
+    if (updatingProduct) {
+      setName(updatingProduct.name);
+      setPrice(updatingProduct.price.toString());
+      setImage(updatingProduct.image);
+    }
+  }, [updatingProduct]);
 
   const validateInput = () => {
     setErrors("");
@@ -50,9 +84,7 @@ const CreateProduct = () => {
       return;
     }
 
-    console.warn("Creating product");
-
-    resetFields();
+    createProduct({ name, price: parseFloat(price), image });
   };
 
   const onUpdate = () => {
@@ -60,9 +92,12 @@ const CreateProduct = () => {
       return;
     }
 
-    console.warn("Updating product");
-
-    resetFields();
+    updateProduct({
+      id,
+      name,
+      price: parseFloat(price),
+      image,
+    });
   };
 
   const pickImage = async () => {
@@ -80,7 +115,9 @@ const CreateProduct = () => {
       setImage(result.assets[0].uri);
     }
   };
-  const onDelete = () => {};
+  const onDelete = () => {
+    deleteProduct(id);
+  };
 
   const confirmDelete = () => {
     Alert.alert("Confirm", "Are you sure you want to delete this product", [
