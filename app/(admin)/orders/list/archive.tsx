@@ -1,9 +1,23 @@
-import orders from "@/assets/data/orders";
 import OrderListItem from "@/components/OrderListItem";
+import { useGetAllOrdersAdmins } from "@/queries";
 
-import { FlatList, View } from "react-native";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
 
 export default function ArchiveScreen() {
+  const {
+    data: orders,
+    isLoading,
+    error,
+  } = useGetAllOrdersAdmins({ archived: true });
+
+  if (isLoading) {
+    return <ActivityIndicator />;
+  }
+
+  if (error) {
+    return <Text>Failed to fetch data</Text>;
+  }
+
   return (
     <View>
       <FlatList

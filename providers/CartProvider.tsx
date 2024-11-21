@@ -2,6 +2,8 @@ import { createContext, PropsWithChildren, useContext, useState } from "react";
 import { CartItem } from "../types";
 import { randomUUID } from "expo-crypto";
 import { Tables } from "@/database.types";
+import { useRouter } from "expo-router";
+import { useCreateOrder, useCreateOrderItems } from "@/queries";
 
 type Product = Tables<"products">;
 
@@ -10,6 +12,7 @@ type CartType = {
   addItem: (product: Product, size: CartItem["size"]) => void;
   updateQuantity: (itemId: string, amount: -1 | 1) => void;
   total: number;
+  checkout: () => void;
 };
 
 export const CartContext = createContext<CartType>({
@@ -17,10 +20,19 @@ export const CartContext = createContext<CartType>({
   addItem: () => {},
   updateQuantity: () => {},
   total: 0,
+  checkout: () => {},
 });
 
 const CartProvider = ({ children }: PropsWithChildren) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const router = useRouter();
+  const { mutate: createOrder } = useCreateOrder((data) => {
+    setItems([]);
+    router.push(`/(user)/orders/${data.id}`);
+  });
+  const { mutate: createOrderItems } = useCreateOrderItems((data) => {
+    setItems([]);
+  });
 
   const addItem = (product: Product, size: CartItem["size"]) => {
     // if already in cart, increase quantity
@@ -64,8 +76,32 @@ const CartProvider = ({ children }: PropsWithChildren) => {
       .toFixed(2)
   );
 
+  const checkout = () => {
+    createOrder(
+      {
+        total,
+      },
+      {
+        onSuccess: saveOrderItems,
+      }
+    );
+  };
+
+  const saveOrderItems = (order: Tables<"orders">) => {
+    const orderItems = items.map((item) => ({
+      product_id: item.product_id,
+      size: item.size,
+      quantity: item.quantity,
+      order_id: order.id,
+    }));
+
+    createOrderItems(orderItems);
+  };
+
   return (
-    <CartContext.Provider value={{ items, addItem, updateQuantity, total }}>
+    <CartContext.Provider
+      value={{ items, addItem, updateQuantity, total, checkout }}
+    >
       {children}
     </CartContext.Provider>
   );
