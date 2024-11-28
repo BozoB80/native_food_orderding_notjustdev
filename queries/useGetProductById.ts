@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabase";
-import { Product } from "@/types";
+import { Tables } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
 const useGetProduct = (id: number) => {
-  return useQuery<Product>({
+  return useQuery<Tables<"products">>({
     queryKey: ["product", id],
     queryFn: async () => {
       const { data, error } = await supabase

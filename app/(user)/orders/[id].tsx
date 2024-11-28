@@ -6,15 +6,18 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
-import orders from "../../../assets/data/orders";
 import OrderItemListItem from "../../../components/OrderItemListItem";
 import OrderListItem from "../../../components/OrderListItem";
 import { useGetOrderDetails } from "@/queries/useGetOrderDetails";
+import { useSubscriptionUpdateOrders } from "@/queries";
 
 const OrderDetailScreen = () => {
   const { id: idString } = useLocalSearchParams();
   const id = parseFloat(typeof idString === "string" ? idString : idString[0]);
   const { data: order, isLoading, error } = useGetOrderDetails(id);
+
+  // Real time updates - changes in order
+  useSubscriptionUpdateOrders(id);
 
   if (isLoading) {
     return <ActivityIndicator />;
